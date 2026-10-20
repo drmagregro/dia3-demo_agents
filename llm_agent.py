@@ -14,6 +14,15 @@ class ConversationAgent:
                     "content": self.read_file(file_path="./context.txt")
                 }
             ]
+        
+        
+    def transcribe_audio(self, audio_file):
+        transcription = self.groq_client.audio.transcriptions.create(
+            file=(audio_file.name, audio_file.read()),
+            model="whisper-large-v3-turbo",
+            language="fr",
+        )
+        return transcription.text
 
 
     @staticmethod
@@ -47,6 +56,8 @@ class ConversationAgent:
 
 
         self.update_conversation_history(role="assistant", content=response)
+
+    
 
 
 

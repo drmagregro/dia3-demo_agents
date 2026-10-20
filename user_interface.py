@@ -27,12 +27,20 @@ class UserInterface:
 		text_interaction = st.chat_input(
 			"Que veux tu moussaillon ?",
 			accept_file=False,
-			accept_audio=False
-			)
+			accept_audio=True
+		)
 
-		if text_interaction :
-			self.conversation_agent_object.ask_llm(text_interaction)
-			self.show_discussion_history()
+		if text_interaction:
+			if text_interaction.audio:
+				question = self.conversation_agent_object.transcribe_audio(text_interaction.audio)
+			else:
+				question = text_interaction.text
+
+			if question:
+				self.conversation_agent_object.ask_llm(question)
+
+		self.show_discussion_history()
+
 
 
 
