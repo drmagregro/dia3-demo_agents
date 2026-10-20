@@ -1,4 +1,4 @@
-import streamlit as st 
+import streamlit as st
 from llm_agent import ConversationAgent
 
 
@@ -10,10 +10,8 @@ class UserInterface:
 
 
 	def get_persistant_conversation_agent(self):
-		
 		if "conversation_agent_object" not in st.session_state:
 			st.session_state.conversation_agent_object = ConversationAgent()
-
 		return st.session_state.conversation_agent_object
 
 
@@ -23,75 +21,44 @@ class UserInterface:
 				st.markdown(message["content"])
 
 
+	def build_question(self, user_input):
+		agent = self.conversation_agent_object
+
+		# 1. Question vocale ou écrite
+		if user_input.audio:
+			question = agent.transcribe_audio(user_input.audio)
+		else:
+			question = user_input.text or ""
+
+		# 2. Fichiers joints : images ou texte
+		for file in user_input.files:
+			if file.type.startswith("image/"):
+				description = agent.describe_image(file, question)
+				question += f"\n\n--- Image : {file.name} ---\n{description}"
+			else:
+				content = agent.read_uploaded_file(file)
+				question += f"\n\n--- Fichier : {file.name} ---\n{content}"
+
+		return question
+
+
 	def run(self):
-		text_interaction = st.chat_input(
+		user_input = st.chat_input(
 			"Que veux tu moussaillon ?",
-			accept_file=False,
+			accept_file=True,
+			file_type=["txt", "md", "csv", "pdf", "png", "jpg", "jpeg", "webp"],
 			accept_audio=True
 		)
 
-		if text_interaction:
-			if text_interaction.audio:
-				question = self.conversation_agent_object.transcribe_audio(text_interaction.audio)
-			else:
-				question = text_interaction.text
-
-			if question:
-				self.conversation_agent_object.ask_llm(question)
+		if user_input:
+			question = self.build_question(user_input)
+			if question.strip():
+				with st.spinner("Barbe-Quasar réfléchit..."):
+					self.conversation_agent_object.ask_llm(question)
 
 		self.show_discussion_history()
-
-
 
 
 if __name__ == "__main__":
 	user_interface_object = UserInterface()
 	user_interface_object.run()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	# response = ask_llm(user_input)
-	# with st.chat_message("user"):
-	# 	st.markdown(user_input)
-
-	# with st.chat_message("system"):
-	# 	st.markdown(response)
-
-
